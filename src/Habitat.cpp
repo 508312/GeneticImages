@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <random>
 #include <math.h>
+#include <execution>
 
 bool cmp(const PopulationGroup& a, const PopulationGroup& b) {
 	return a.fitness < b.fitness;
@@ -23,20 +24,25 @@ Habitat::Habitat(const SrcImage* reconstructionImage, const std::vector<SrcImage
 void Habitat::step() {
     std::sort(mPopulation.begin(), mPopulation.end(), cmp);
 
-	for(int i=0; i<mSettings.popSize; i++) {
+    std::vector<int> indexes;
+    for(int i=0; i<mSettings.popSize; i++) {
 		if(i>mSettings.popSize - ceil(mSettings.popSize * mSettings.reroll)) {
-			if(rand()%100 < mSettings.crossoverChance) {
-				int ind1 = rand() % mSettings.popSize;
-				int ind2 = rand() % mSettings.popSize;
-				crossover(mPopulation[ind1], mPopulation[ind2], mPopulation[i]);
-			}
-			else {
-                mutate(mPopulation[i]);
-			}
+            indexes.push_back(i);
+    }
+    }
 
-            drawComputeFit(mPopulation[i]);
-		}
-	}
+    std::for_each(std::execution::par_unseq, indexes.begin(), indexes.end(), [&](int i) {
+        if(rand()%100 < mSettings.crossoverChance) {
+            int ind1 = rand() % mSettings.popSize;
+            int ind2 = rand() % mSettings.popSize;
+            crossover(mPopulation[ind1], mPopulation[ind2], mPopulation[i]);
+        }
+        else {
+            mutate(mPopulation[i]);
+        }
+
+        drawComputeFit(mPopulation[i]);
+    });
 }
 
 const PopulationGroup& Habitat::getBestGroup() {
