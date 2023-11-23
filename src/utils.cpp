@@ -8,18 +8,18 @@
 #include <iostream>
 #include <math.h>
 
-void load_images(std::string path, std::vector<image>& images) {
+void load_images(std::string path, std::vector<SrcImage>& images) {
     int ind = 0;
 
     for (const auto & entry : std::filesystem::directory_iterator(path)) {
-        image img;
+        SrcImage img;
         img.data = NULL;
         img.path = entry.path().string();
         images.push_back(img);
         ind++;
     }
 
-    std::for_each(std::execution::par_unseq, images.begin(), images.end(), [](image& image){
+    std::for_each(std::execution::par_unseq, images.begin(), images.end(), [](SrcImage& image){
         std::cout << "loading " << image.path << "\n";
         SDL_Surface* surf = IMG_Load(image.path.c_str());
         if (surf == NULL) {

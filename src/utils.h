@@ -8,7 +8,7 @@
 #define PIXELS_PER_IMAGE 50000.0
 
 /* Img utils */
-typedef struct image {
+typedef struct SrcImage {
     uint16_t width;
     uint16_t height;
     uint16_t pitch;
@@ -17,7 +17,7 @@ typedef struct image {
     uint8_t* data;
 };
 
-void load_images(std::string path, std::vector<image>&images);
+void load_images(std::string path, std::vector<SrcImage>&images);
 
 /* Math utils */
 int compute_sad(uint8_t* image, uint8_t* target, size_t num_bytes);
