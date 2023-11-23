@@ -24,7 +24,7 @@
 
 bool init_sdl(SDL_Window** window_ptr, SDL_Surface** surface_ptr, SDL_Renderer** renderer_ptr,
                    int x_win_res, int y_win_res);
-void sdl_draw(SDL_Renderer* renderer, const image_t& img);
+void sdl_draw(SDL_Renderer* renderer, const image& img);
 
 int main( int argc, char* args[] ) {
     SDL_Window* window = NULL;
@@ -34,9 +34,9 @@ int main( int argc, char* args[] ) {
     init_sdl(&window, &screenSurface, &renderer, 400, 400);
     IMG_Init(IMG_INIT_PNG);
 
-    std::vector<image_t> src_images;
+    std::vector<image> src_images;
     load_images("hemtai", src_images);
-    image_t reconstructed = src_images[0];
+    image reconstructed = src_images[0];
     reconstructed.data = new uint8_t[reconstructed.width * reconstructed.height * 4];
     memset(reconstructed.data, 0xFFFFFF00, reconstructed.width * reconstructed.height);
     RotatePixel_t *pPstBase = static_cast<RotatePixel_t*>((void*)reconstructed.data);
@@ -122,7 +122,7 @@ bool init_sdl(SDL_Window** window_ptr, SDL_Surface** surface_ptr, SDL_Renderer**
     return true;
 }
 
-void sdl_draw(SDL_Renderer* renderer, const image_t& img) {
+void sdl_draw(SDL_Renderer* renderer, const image& img) {
     SDL_Texture *intermediate = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
                                 SDL_TEXTUREACCESS_STREAMING, img.width, img.height);
     SDL_UpdateTexture(intermediate, NULL, (void*)img.data, 4 * img.width);
