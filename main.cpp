@@ -38,21 +38,23 @@ int main( int argc, char* args[] ) {
 
     std::vector<SrcImage> src_images;
     load_images("hemtai", src_images);
-    SrcImage reconstructed = src_images[src_images.size()-1];
-    src_images.pop_back();
+    int recInd = src_images.size()-4;
+    SrcImage reconstructed = src_images[recInd];
+    std::cout << "RECONSTRUCTING " << reconstructed.path << std::endl;
+    src_images.erase(src_images.begin() + recInd);
     Habitat hbsim = Habitat(&reconstructed, &src_images);
 
     Timer t;
     t.start();
     for (int i = 0; i < 100000000; i++) {
         hbsim.step();
-
-        if (i % 10 == 0) {
-            while (SDL_PollEvent(&event)) {
-                }
+        while (SDL_PollEvent(&event)) {
+        }
+        if (i % 500 == 0) {
             sdl_draw(renderer, reconstructed, (void*)hbsim.getBestGroup().pastedData);
-            std::cout << "currently at " << i << " 100 gens took " << t.get() <<
-             "\n" << "sad is " << hbsim.getBestGroup().fitness << "\n";
+            std::cout << "currently at " << i << " 500 gens took " << t.get() <<
+             "\n" << "sad is " << hbsim.getBestGroup().fitness <<
+              " num images :" << hbsim.getBestGroup().individuals.size() << "\n";
 
             t.start();
         }
@@ -91,6 +93,7 @@ void sdl_draw(SDL_Renderer* renderer, const SrcImage& img, void* data) {
                                 SDL_TEXTUREACCESS_STREAMING, img.width, img.height);
     SDL_UpdateTexture(intermediate, NULL, data, img.pitch);
 
+    SDL_SetRenderDrawColor(renderer, 88, 88, 88, 255);
     SDL_RenderClear(renderer);
 	SDL_RenderCopy(renderer, intermediate, NULL, NULL);
 	SDL_RenderPresent(renderer);

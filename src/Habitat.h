@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "vector"
 
-#define SETTINGS_DEFAULT Settings{200, 20, 0.75, 90, 0.2, 2}
+#define SETTINGS_DEFAULT Settings{12, 30, 0.7, 70, 0.001, 1}
 
 struct Individual {
     const SrcImage* img;
@@ -53,6 +53,9 @@ class Habitat
         void crossover(const PopulationGroup& grpA, const PopulationGroup& grpB, PopulationGroup& grpC);
         void drawComputeFit(PopulationGroup& grp);
         void mutate(PopulationGroup& grp);
+        void mutateAdjust(PopulationGroup& grp);
+        void mutateAdd(PopulationGroup& grp);
+        void mutateRemove(PopulationGroup& grp);
 };
 
 #endif // HABITAT_H

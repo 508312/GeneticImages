@@ -86,6 +86,17 @@ int compute_sad(uint8_t* image, uint8_t* target, size_t num_bytes) {
     return sum;
 }
 
+int compute_sse_naive(uint8_t* image, uint8_t* target, size_t num_bytes) {
+    int sum = 0;
+
+    for (int i = 0; i < num_bytes; i++) {
+        int dif = image[i] - target[i];
+        sum += dif * dif;
+    }
+
+    return sum;
+}
+
 void simd_memcpy(uint8_t* dst, uint8_t* src, size_t num_bytes) {
     // should i convert this to uint32_t ?
     // I think benchmarks did not show significant improvement
