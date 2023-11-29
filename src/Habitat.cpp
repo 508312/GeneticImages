@@ -64,7 +64,7 @@ void Habitat::init_pop() {
     for (int i = 0; i < mSettings.popSize; i++) {
         mPopulation.push_back(PopulationGroup{});
         mPopulation[i].pastedData = new uint8_t[mReconstructionImage->width*mReconstructionImage->height*4];
-        mPopulation[i].fitness = UINT32_MAX;
+        mPopulation[i].fitness = UINT64_MAX;
         for (int j = 0; j < mSettings.imgCount; j++) {
             mPopulation[i].individuals.push_back(random_individual());
         }
@@ -72,7 +72,7 @@ void Habitat::init_pop() {
 }
 
 void Habitat::drawComputeFit(PopulationGroup& grp) {
-    memset(grp.pastedData, 0xFF, mReconstructionImage->width*mReconstructionImage->height*4);
+    memset(grp.pastedData, 0x00, mReconstructionImage->width*mReconstructionImage->height*4);
 
     RotatePixel_t *pDstBase = static_cast<RotatePixel_t*>((void*)grp.pastedData);
 
@@ -81,12 +81,13 @@ void Habitat::drawComputeFit(PopulationGroup& grp) {
         RotatePixel_t *pSrcBase = static_cast<RotatePixel_t*>((void*)pImg->data);
         RotateDrawClip(pDstBase, mReconstructionImage->width, mReconstructionImage->height, mReconstructionImage->pitch,
                        pSrcBase, pImg->width, pImg->height, pImg->pitch,
-                       grp.individuals[i].x, grp.individuals[i].y,
+                       grp.individuals[i].xp * mReconstructionImage->width,
+                       grp.individuals[i].yp * mReconstructionImage->height,
                        0, 0,
-                       grp.individuals[i].angle, grp.individuals[i].scale);
+                       grp.individuals[i].angle, (grp.individuals[i].scale*mReconstructionImage->width)/(pImg->width));
     }
 
-    grp.fitness = compute_sad(grp.pastedData, mReconstructionImage->data,
+    grp.fitness = compute_sse_naive(grp.pastedData, mReconstructionImage->data,
                                mReconstructionImage->width*mReconstructionImage->height*4);
 }
 
@@ -132,8 +133,8 @@ void Habitat::mutateAdjust(PopulationGroup& grp) {
         // ADD CLOSEST IMAGES
 
         grp.individuals[i].angle += rand()%50 / 100.0 * std::pow(-1, rand()%2);
-        grp.individuals[i].x += rand()%(mReconstructionImage->width) * 0.1 * std::pow(-1, rand()%2);
-        grp.individuals[i].y += rand()%(mReconstructionImage->height) * 0.1 * std::pow(-1, rand()%2);
+        grp.individuals[i].xp += rand()%(1001)/1000.0 * 0.1 * std::pow(-1, rand()%2);
+        grp.individuals[i].yp += rand()%(1001)/1000.0 * 0.1 * std::pow(-1, rand()%2);
         float randScale = (rand()%((int)(1000*mSettings.maxScale - 1000*mSettings.minScale))
                                                 + (1000*mSettings.minScale)) / 1000.0;
         grp.individuals[i].scale += randScale * 0.1 * std::pow(-1, rand()%2);
@@ -150,23 +151,32 @@ Individual Habitat::random_individual() {
 
     SrcImage* img;
     int imgID;
-    int x;
-    int y;
-    float angle;
-    float scale;
 
     newIndiv.imgID = rand()%(mRefImages->size());
     newIndiv.img = &(*mRefImages)[newIndiv.imgID];
 
-    newIndiv.x = rand()%(mReconstructionImage->width);
-    newIndiv.y = rand()%(mReconstructionImage->height);
+    newIndiv.xp = rand()%(1001)/1000.0;
+    newIndiv.yp = rand()%(1001)/1000.0;
     newIndiv.angle = rand()%(314) / 100.0;
-    newIndiv.scale = (rand()%((int)(1000*mSettings.maxScale - 1000*mSettings.minScale))
+    float scale = (rand()%((int)(1000*mSettings.maxScale - 1000*mSettings.minScale))
                                                 + (1000*mSettings.minScale)) / 1000.0;
-    //newIndiv.scale = mSettings.minScale;
+
+    newIndiv.scale = scale;
 
     return newIndiv;
 
+}
+
+void Habitat::reload_indiv_pointers() {
+    for (int i = 0; i < mSettings.popSize; i++) {
+        for (int j = 0; j < mPopulation[i].individuals.size(); j++) {
+            Individual& indiv = mPopulation[i].individuals[j];
+            indiv.img = &(*mRefImages)[indiv.imgID];
+        }
+        delete[] mPopulation[i].pastedData;
+        mPopulation[i].pastedData = new uint8_t[mReconstructionImage->width*mReconstructionImage->height*4];
+        drawComputeFit(mPopulation[i]);
+    }
 }
 
 Habitat::~Habitat() {

@@ -4,14 +4,14 @@
 #include "utils.h"
 #include "vector"
 
-#define SETTINGS_DEFAULT Settings{12, 30, 0.7, 70, 0.001, 1}
+#define SETTINGS_DEFAULT Settings{12, 30, 0.7, 70, 0.001, 2}
 
 struct Individual {
     const SrcImage* img;
 
     int imgID;
-    int x;
-    int y;
+    float xp; //xpercent
+    float yp; //ypercent
     float angle;
     float scale;
 };
@@ -19,7 +19,7 @@ struct Individual {
 struct PopulationGroup {
     std::vector<Individual> individuals;
     uint8_t* pastedData;
-    uint32_t fitness;
+    uint64_t fitness;
 };
 
 struct Settings {
@@ -39,6 +39,9 @@ class Habitat
         virtual ~Habitat();
 
         void step();
+
+        // Todo: are pointers inside invididual worth this function?
+        void reload_indiv_pointers();
         const PopulationGroup& getBestGroup();
     protected:
 

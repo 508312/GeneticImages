@@ -1,11 +1,11 @@
+#include <windows.h>
+#include <winuser.h>
+
 #include <SDL.h>
 #include <SDL_image.h>
 
 #include <iostream>
 #include <cmath>
-
-#include <windows.h>
-#include <winuser.h>
 
 #include <random>
 
@@ -23,22 +23,30 @@
 #include <opencv2/imgcodecs.hpp>
 
 #include "utils.h"
-
 bool init_sdl(SDL_Window** window_ptr, SDL_Surface** surface_ptr, SDL_Renderer** renderer_ptr,
                    int x_win_res, int y_win_res);
 void sdl_draw(SDL_Renderer* renderer, const SrcImage& img, void* data);
 
 int main( int argc, char* args[] ) {
+    SetProcessDPIAware();
+
     SDL_Window* window = NULL;
     SDL_Surface* screenSurface = NULL;
     SDL_Renderer* renderer = NULL;
     SDL_Event event;
-    init_sdl(&window, &screenSurface, &renderer, 400, 400);
+
+    SDL_Window* window2 = NULL;
+    SDL_Surface* screenSurface2 = NULL;
+    SDL_Renderer* renderer2 = NULL;
+
+    init_sdl(&window, &screenSurface, &renderer, 2112/2.5, 4096/2.5);
+    init_sdl(&window2, &screenSurface2, &renderer2, 2112/2.5, 4096/2.5);
+
     IMG_Init(IMG_INIT_PNG);
 
     std::vector<SrcImage> src_images;
-    load_images("hemtai", src_images);
-    int recInd = src_images.size()-4;
+    load_images(20000, "hemtai", src_images);
+    int recInd = src_images.size()-2;
     SrcImage reconstructed = src_images[recInd];
     std::cout << "RECONSTRUCTING " << reconstructed.path << std::endl;
     src_images.erase(src_images.begin() + recInd);
@@ -46,18 +54,37 @@ int main( int argc, char* args[] ) {
 
     Timer t;
     t.start();
+    int interval = 500;
     for (int i = 0; i < 100000000; i++) {
         hbsim.step();
+
+        if (i == 300000) {
+            src_images.clear(); // TODO: free .data of underlying images
+            load_images(60000, "hemtai", src_images);
+            reconstructed = src_images[recInd];
+            src_images.erase(src_images.begin() + recInd);
+            hbsim.reload_indiv_pointers();
+        }
+        if (i == 420000) {
+            src_images.clear(); // TODO: free .data of underlying images
+            load_images(100000000000, "hemtai", src_images);
+            reconstructed = src_images[recInd];
+            src_images.erase(src_images.begin() + recInd);
+            hbsim.reload_indiv_pointers();
+            interval = 1;
+        }
         while (SDL_PollEvent(&event)) {
         }
-        if (i % 500 == 0) {
+        if (i % interval == 0) {
             sdl_draw(renderer, reconstructed, (void*)hbsim.getBestGroup().pastedData);
-            std::cout << "currently at " << i << " 500 gens took " << t.get() <<
+            sdl_draw(renderer2, reconstructed, (void*)reconstructed.data);
+            std::cout << "currently at " << i << " " << interval << " gens took " << t.get() <<
              "\n" << "sad is " << hbsim.getBestGroup().fitness <<
               " num images :" << hbsim.getBestGroup().individuals.size() << "\n";
 
             t.start();
         }
+
     }
 
     return 0;

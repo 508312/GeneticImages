@@ -745,6 +745,19 @@ void RotateDrawClipExt2
                     c = mergeFunc(c, o, mergeParam);
                 }
 
+                RotatePixel_t o = *dstCurrent;
+                //uint8_t mix = (((o) & 0xff) + ((c) & 0xff))/255;
+                //uint32_t s = 255 - mix;
+                /*
+                c = ((((((c >> 0)  & 0xff) * s +
+                   ((o >> 0)  & 0xff) * mix) >> 8)) |
+                (((((c >> 8)  & 0xff) * s +
+                   ((o >> 8)  & 0xff) * mix))  & ~0xff) |
+                (((((c >> 16) & 0xff) * s +
+                   ((o >> 16) & 0xff) * mix) << 8)  & ~0xffff) |
+                (((((c >> 24) & 0xff) * s +
+                   ((o >> 24) & 0xff) * mix) << 16) & ~0xffffff));
+                   */
                 #ifdef OPT_DST_ADDR
                 *dstCurrent++ = c;
                 #else

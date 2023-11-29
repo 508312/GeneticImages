@@ -8,7 +8,7 @@
 #include <iostream>
 #include <math.h>
 
-void load_images(std::string path, std::vector<SrcImage>& images) {
+void load_images(int px_per_image, std::string path, std::vector<SrcImage>& images) {
     int ind = 0;
 
     for (const auto & entry : std::filesystem::directory_iterator(path)) {
@@ -19,14 +19,14 @@ void load_images(std::string path, std::vector<SrcImage>& images) {
         ind++;
     }
 
-    std::for_each(std::execution::par_unseq, images.begin(), images.end(), [](SrcImage& image){
+    std::for_each(std::execution::par_unseq, images.begin(), images.end(), [px_per_image](SrcImage& image){
         std::cout << "loading " << image.path << "\n";
         SDL_Surface* surf = IMG_Load(image.path.c_str());
         if (surf == NULL) {
             std::cout << "encountering error on " << image.path << " skipping " << SDL_GetError() << std::endl;
             return;
         }
-        float scale = std::sqrt(PIXELS_PER_IMAGE/(surf->w*surf->h));
+        double scale = std::sqrt(std::min(px_per_image/(double)(surf->w*surf->h), (double)1.0));
         SDL_Surface* scaled_surf = SDL_CreateRGBSurface(0,surf->w * scale,surf->h * scale,32,0,0,0,0);
         SDL_Surface* formatted_surf = SDL_ConvertSurface(surf, scaled_surf->format, NULL);
         if (scaled_surf == NULL || formatted_surf == NULL) {
@@ -86,8 +86,8 @@ int compute_sad(uint8_t* image, uint8_t* target, size_t num_bytes) {
     return sum;
 }
 
-int compute_sse_naive(uint8_t* image, uint8_t* target, size_t num_bytes) {
-    int sum = 0;
+uint64_t compute_sse_naive(uint8_t* image, uint8_t* target, size_t num_bytes) {
+    uint64_t sum = 0;
 
     for (int i = 0; i < num_bytes; i++) {
         int dif = image[i] - target[i];

@@ -4,9 +4,6 @@
 #include <string>
 #include <vector>
 
-//TODO: do this better
-#define PIXELS_PER_IMAGE 30000.0
-
 /* Img utils */
 typedef struct SrcImage {
     uint16_t width;
@@ -17,12 +14,12 @@ typedef struct SrcImage {
     uint8_t* data;
 };
 
-void load_images(std::string path, std::vector<SrcImage>&images);
+void load_images(int px_per_image, std::string path, std::vector<SrcImage>&images);
 
 /* Math utils */
 int compute_sad(uint8_t* image, uint8_t* target, size_t num_bytes);
 int compute_sad_naive(uint8_t* image, uint8_t* target, size_t num_bytes);
-int compute_sse_naive(uint8_t* image, uint8_t* target, size_t num_bytes);
+uint64_t compute_sse_naive(uint8_t* image, uint8_t* target, size_t num_bytes);
 void simd_memcpy(uint8_t* dst, uint8_t* src, size_t num_bytes);
 
 #endif // UTILS_H
