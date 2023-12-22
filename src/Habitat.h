@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "vector"
 
-#define SETTINGS_DEFAULT Settings{12, 30, 0.7, 70, 0.001, 2}
+#define SETTINGS_DEFAULT Settings{16, 30, 0.85, 65, 0.01, 1}
 
 struct Individual {
     const SrcImage* img;
@@ -31,6 +31,11 @@ struct Settings {
     float maxScale;
 };
 
+struct distToImg {
+    int imgId;
+    int distance;
+};
+
 class Habitat
 {
     public:
@@ -42,6 +47,7 @@ class Habitat
 
         // Todo: are pointers inside invididual worth this function?
         void reload_indiv_pointers();
+        void calculateClosest();
         const PopulationGroup& getBestGroup();
     protected:
 
@@ -49,6 +55,8 @@ class Habitat
         std::vector<PopulationGroup> mPopulation;
         const std::vector<SrcImage>* mRefImages;
         const SrcImage* mReconstructionImage;
+        std::vector<std::vector<distToImg>> mClosestImages;
+        uint8_t* mRecSobel;
         Settings mSettings;
 
         void init_pop();

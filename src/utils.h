@@ -22,4 +22,7 @@ int compute_sad_naive(uint8_t* image, uint8_t* target, size_t num_bytes);
 uint64_t compute_sse_naive(uint8_t* image, uint8_t* target, size_t num_bytes);
 void simd_memcpy(uint8_t* dst, uint8_t* src, size_t num_bytes);
 
+uint8_t* SobelSimd(uint8_t* inputImage, int width, int height, int pitch);
+uint8_t* to_greyscale(uint8_t* inputImage, int width, int height, int pitch);
+
 #endif // UTILS_H
