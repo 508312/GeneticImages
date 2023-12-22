@@ -38,7 +38,7 @@ int main( int argc, char* args[] ) {
     IMG_Init(IMG_INIT_PNG);
 
     std::vector<SrcImage> src_images;
-    load_images("hemtaiClean", src_images);
+    load_images("Qats_reduced", src_images);
     int recInd = src_images.size()-1;
     SrcImage reconstructed = src_images[recInd];
     reconstructed.data = new uint8_t[reconstructed.width * reconstructed.height * 4];
