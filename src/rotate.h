@@ -1,3 +1,8 @@
+/* FOLLOWING FILE IS TAKEN FROM :
+                    https://github.com/openlab-vn-ua/ImageRotation/tree/master
+   There may be small modifications in some functions.
+*/
+
 #ifndef ROTATE_H_INCLUDED
 #define ROTATE_H_INCLUDED
 

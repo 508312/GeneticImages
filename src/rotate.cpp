@@ -1,3 +1,9 @@
+/* FOLLOWING FILE IS TAKEN FROM :
+                    https://github.com/openlab-vn-ua/ImageRotation/tree/master
+   There may be small modifications in some functions.
+*/
+
+
 #include "rotate.h"
 #include <math.h>
 

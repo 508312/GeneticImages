@@ -125,7 +125,10 @@ int compute_sad_naive(uint8_t* image, uint8_t* target, size_t num_bytes) {
     return sum;
 }
 
-// ARGB
+/* Following function is taken from:
+                        https://github.com/m3y54m/sobel-simd-opencv
+   Small modifications were applied.
+*/
 uint8_t* SobelSimd(uint8_t* inputImage, int width, int height, int pitch) {
     uint8_t* outputImage = new uint8_t[height * pitch];
     const int border = 8;
