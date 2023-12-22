@@ -20,6 +20,9 @@
 #include "opencv2/opencv.hpp"
 #include <opencv2/imgcodecs.hpp>
 
+#include <tbb/parallel_for.h>
+#include <tbb/mutex.h>
+
 #include "utils.h"
 
 bool init_sdl(SDL_Window** window_ptr, SDL_Surface** surface_ptr, SDL_Renderer** renderer_ptr,
@@ -35,13 +38,21 @@ int main( int argc, char* args[] ) {
     IMG_Init(IMG_INIT_PNG);
 
     std::vector<SrcImage> src_images;
-    load_images("imgsimple", src_images);
+    load_images("hemtaiClean", src_images);
     int recInd = src_images.size()-1;
     SrcImage reconstructed = src_images[recInd];
     reconstructed.data = new uint8_t[reconstructed.width * reconstructed.height * 4];
     memset(reconstructed.data, 0xFFFFFF00, reconstructed.width * reconstructed.height*4);
     RotatePixel_t *pPstBase = static_cast<RotatePixel_t*>((void*)reconstructed.data);
     RotatePixel_t *pDstBase = static_cast<RotatePixel_t*>((void*)src_images[recInd].data);
+
+    int best_sad;
+    int bestX;
+    int bestY;
+    float bestA;
+    float bestS;
+
+    tbb::mutex best_mutex;
 
     Timer t;
     t.start();
@@ -51,31 +62,37 @@ int main( int argc, char* args[] ) {
             continue;
         }
         RotatePixel_t *pSrcBase = static_cast<RotatePixel_t*>((void*)src_images[index].data);
-        int best_sad = INT_MAX;
-        int bestX;
-        int bestY;
-        float bestA;
-        float bestS;
-        for (int j = 0; j < 100; j++) {
-            int fDstCX = rand()%(src_images[recInd].width);
-            int fDstCY = rand()%(src_images[recInd].height);
-            float fAngle = rand()%(314) / 100.0;
-            float fScale = (rand()%(1500) + 1) / 1000.0;
-            sadPair genQuality = RotateDrawClipSad(
-                    pDstBase, src_images[recInd].width, src_images[recInd].height, src_images[recInd].pitch,
-                    pSrcBase, src_images[index].width, src_images[index].height, src_images[index].pitch,
-                    pPstBase,
-                    fDstCX, fDstCY,
-                    0, 0,
-                    fAngle, fScale );
-            if (genQuality.sad1 < genQuality.sad2 && genQuality.sad1 < best_sad) {
-                best_sad = genQuality.sad1;
-                bestX = fDstCX;
-                bestY = fDstCY;
-                bestA = fAngle;
-                bestS = fScale;
+
+        best_sad = INT_MAX;
+        tbb::parallel_for( tbb::blocked_range<int>(0, 100, 1),
+                       [&](tbb::blocked_range<int> r) {
+            for (int j = r.begin(); j < r.end(); j++) {
+                int fDstCX = rand()%(src_images[recInd].width);
+                int fDstCY = rand()%(src_images[recInd].height);
+                float fAngle = rand()%(314) / 100.0;
+                float fScale = (rand()%(1500) + 1) / 1000.0;
+                sadPair genQuality = RotateDrawClipSad(
+                        pDstBase, src_images[recInd].width, src_images[recInd].height, src_images[recInd].pitch,
+                        pSrcBase, src_images[index].width, src_images[index].height, src_images[index].pitch,
+                        pPstBase,
+                        fDstCX, fDstCY,
+                        0, 0,
+                        fAngle, fScale );
+
+
+                tbb::mutex::scoped_lock lock;
+                lock.acquire(best_mutex);
+                if (genQuality.sad1 < genQuality.sad2 && genQuality.sad1 < best_sad) {
+                    best_sad = genQuality.sad1;
+                    bestX = fDstCX;
+                    bestY = fDstCY;
+                    bestA = fAngle;
+                    bestS = fScale;
+                }
+
+                lock.release();
             }
-        }
+        });
 
         if (best_sad != INT_MAX) {
             RotateDrawClip(
@@ -85,11 +102,11 @@ int main( int argc, char* args[] ) {
                     0, 0,
                     bestA, bestS );
         }
-        if (i % 100 == 0) {
+        if (i % 500 == 0) {
             while (SDL_PollEvent(&event)) {
                 }
             sdl_draw(renderer, reconstructed);
-            std::cout << "currently at " << i << " 100 gens took " << t.get() <<
+            std::cout << "currently at " << i << " 500 gens took " << t.get() <<
              "\n" << "sad is " << compute_sad(src_images[0].data,
                                                     reconstructed.data,
                                                     reconstructed.width * reconstructed.height * 4) << "\n";

@@ -45,10 +45,12 @@ int main( int argc, char* args[] ) {
     IMG_Init(IMG_INIT_PNG);
 
     std::vector<SrcImage> src_images;
-    load_images(20000, "hemtai", src_images);
-    int recInd = src_images.size()-2;
+    load_images(20000, "Qats_reduced", src_images);
+    int recInd = src_images.size()-1;
     SrcImage reconstructed = src_images[recInd];
     std::cout << "RECONSTRUCTING " << reconstructed.path << std::endl;
+    std::cout << "p1 p2 p3 p4 " << (int)reconstructed.data[0] << " " << (int)reconstructed.data[1]
+     << " " << (int)reconstructed.data[2] << " " << (int)reconstructed.data[3] << " " << std::endl;
     src_images.erase(src_images.begin() + recInd);
     Habitat hbsim = Habitat(&reconstructed, &src_images);
 
@@ -58,16 +60,24 @@ int main( int argc, char* args[] ) {
     for (int i = 0; i < 100000000; i++) {
         hbsim.step();
 
+        if (i == 80000) {
+            src_images.clear(); // TODO: free .data of underlying images
+            load_images(30000, "Qats_reduced", src_images);
+            reconstructed = src_images[recInd];
+            src_images.erase(src_images.begin() + recInd);
+            hbsim.reload_indiv_pointers();
+        }
+
         if (i == 300000) {
             src_images.clear(); // TODO: free .data of underlying images
-            load_images(60000, "hemtai", src_images);
+            load_images(60000, "Qats_reduced", src_images);
             reconstructed = src_images[recInd];
             src_images.erase(src_images.begin() + recInd);
             hbsim.reload_indiv_pointers();
         }
         if (i == 420000) {
             src_images.clear(); // TODO: free .data of underlying images
-            load_images(100000000000, "hemtai", src_images);
+            load_images(100000000000, "Qats_reduced", src_images);
             reconstructed = src_images[recInd];
             src_images.erase(src_images.begin() + recInd);
             hbsim.reload_indiv_pointers();
